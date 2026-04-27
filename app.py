@@ -3,12 +3,15 @@ from groq import Groq
 import datetime
 import os
 import json
+import requests
 from ddgs import DDGS
 
 app = Flask(__name__, template_folder='lucci_templates')
 client = Groq(api_key=os.environ.get('GROQ_API_KEY'))
 
 MEMORY_FILE = 'memory.json'
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
+TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
 
 def load_memory():
     if os.path.exists(MEMORY_FILE):
@@ -21,6 +24,13 @@ def save_memory(history):
         json.dump(history[-50:], f)
 
 conversation_history = load_memory()
+
+def send_telegram(message):
+    try:
+        url = f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage'
+        requests.post(url, json={'chat_id': TELEGRAM_CHAT_ID, 'text': message})
+    except:
+        pass
 
 def get_current_time():
     now = datetime.datetime.now()
@@ -84,6 +94,7 @@ def chat():
 
     elif any(word in user_input_lower for word in ['save', 'note', 'remember this']):
         save_note(user_input)
+        send_telegram(f'📝 Note saved: {user_input}')
         return jsonify({'response': 'Got it, note saved.'})
 
     elif 'forget' in user_input_lower or 'clear memory' in user_input_lower:
@@ -102,6 +113,7 @@ def chat():
     reply = response.choices[0].message.content
     conversation_history.append({'role': 'assistant', 'content': reply})
     save_memory(conversation_history)
+    send_telegram(f'🤖 Lucci replied:\n{reply[:200]}')
     return jsonify({'response': reply})
 
 if __name__ == '__main__':
