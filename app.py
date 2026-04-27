@@ -3,7 +3,6 @@ from groq import Groq
 import datetime
 import os
 import json
-import math
 from ddgs import DDGS
 
 app = Flask(__name__, template_folder='lucci_templates')
@@ -19,7 +18,7 @@ def load_memory():
 
 def save_memory(history):
     with open(MEMORY_FILE, 'w') as f:
-        json.dump(history[-50:], f)  # keep last 50 messages
+        json.dump(history[-50:], f)
 
 conversation_history = load_memory()
 
@@ -47,21 +46,14 @@ def get_weather(city):
         return '\n'.join([r['body'] for r in results])
     return 'Could not fetch weather data.'
 
-def calculate(expression):
-    try:
-        allowed = {k: v for k, v in math.__dict__.items() if not k.startswith('_')}
-        result = eval(expression, {"__builtins__": {}}, allowed)
-        return f'Result: {result}'
-    except Exception as e:
-        return f'Could not calculate: {str(e)}'
-
 system_prompt = '''You are Lucci, a sharp and intelligent personal AI assistant.
 You are direct, confident, and get straight to the point.
 You help with business ideas, automation, AI tools, research, and programming.
 You never give long unnecessary responses unless asked.
 You speak like a smart advisor, not a corporate robot.
 You have memory of past conversations and reference them when relevant.
-You can search the web, check weather, do calculations, and save notes.'''
+You can search the web, check weather, do calculations, and save notes.
+When asked to calculate or solve math, always show the working and final answer clearly.'''
 
 @app.route('/')
 def home():
@@ -82,15 +74,8 @@ def chat():
         execute_prompt = f'Using this weather data: {weather_data}\n\nAnswer this: {user_input}'
         conversation_history.append({'role': 'user', 'content': execute_prompt})
 
-    elif any(word in user_input_lower for word in ['calculate', 'compute', 'math', 'solve', 'multiply', 'divide', 'add', 'subtract']):
-        import re
-        expression = re.sub(r'[^0-9+\-*/().%^ a-z]', '', user_input_lower)
-        expression = expression.replace('x', '*').replace('^', '**')
-        result = calculate(expression.strip())
-        conversation_history.append({'role': 'user', 'content': user_input})
-        conversation_history.append({'role': 'assistant', 'content': result})
-        save_memory(conversation_history)
-        return jsonify({'response': result})
+    elif any(word in user_input_lower for word in ['calculate', 'compute', 'math', 'solve', 'multiply', 'divide', 'add', 'subtract', '%', 'percent']):
+        conversation_history.append({'role': 'user', 'content': user_input + ' (solve this mathematically and show the result clearly)'})
 
     elif any(word in user_input_lower for word in ['search', 'research', 'find out', 'investigate', 'look up']):
         search_results = web_search(user_input)
