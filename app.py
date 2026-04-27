@@ -35,6 +35,7 @@ def home():
 def chat():
     user_input = request.json.get('message')
     user_input_lower = user_input.lower()
+
     if any(word in user_input_lower for word in ['time', 'date', 'day', 'today']):
         current_time = get_current_time()
         return jsonify({'response': 'Right now it is ' + current_time})
@@ -47,7 +48,12 @@ def chat():
         return jsonify({'response': 'Got it, note saved.'})
     else:
         conversation_history.append({'role': 'user', 'content': user_input})
-    response = client.chat.completions.create(model='llama3-70b-8192', messages=[{'role': 'system', 'content': system_prompt}] + conversation_history, max_tokens=1024)
+
+    response = client.chat.completions.create(
+        model='llama-3.3-70b-versatile',
+        messages=[{'role': 'system', 'content': system_prompt}] + conversation_history,
+        max_tokens=1024
+    )
     reply = response.choices[0].message.content
     conversation_history.append({'role': 'assistant', 'content': reply})
     return jsonify({'response': reply})
