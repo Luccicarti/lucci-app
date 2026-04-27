@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Lucci AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: #0d0d0d;
+            color: #ffffff;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+        }
+        .header {
+            padding: 14px 20px;
+            text-align: center;
+            border-bottom: 1px solid #222;
+        }
+        .header h1 {
+            font-size: 22px;
+            color: #00ffaa;
+            letter-spacing: 3px;
+        }
+        .header p {
+            font-size: 11px;
+            color: #555;
+            margin-top: 3px;
+        }
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .message {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background-color: #1a1a2e;
+            align-self: flex-end;
+            border: 1px solid #333;
+        }
+        .lucci-message {
+            background-color: #0f2027;
+            align-self: flex-start;
+            border: 1px solid #00ffaa33;
+            color: #e0e0e0;
+        }
+        .lucci-label {
+            font-size: 10px;
+            color: #00ffaa;
+            margin-bottom: 5px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .input-area {
+            padding: 12px 16px;
+            border-top: 1px solid #222;
+            display: flex;
+            gap: 10px;
+            background-color: #0d0d0d;
+        }
+        .input-area input {
+            flex: 1;
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #ffffff;
+            font-size: 14px;
+            outline: none;
+            min-width: 0;
+        }
+        .input-area input:focus {
+            border-color: #00ffaa;
+        }
+        .input-area button {
+            background-color: #00ffaa;
+            color: #0d0d0d;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        .input-area button:hover {
+            background-color: #00cc88;
+        }
+        .thinking {
+            color: #555;
+            font-style: italic;
+            font-size: 13px;
+            align-self: flex-start;
+        }
+        @media (max-width: 480px) {
+            .message { max-width: 92%; font-size: 13px; }
+            .header h1 { font-size: 18px; }
+            .input-area button { padding: 10px 12px; font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LUCCI</h1>
+        <p>Personal AI Assistant — Built by Seth</p>
+    </div>
+
+    <div class="chat-container" id="chat">
+        <div class="message lucci-message">
+            <div class="lucci-label">LUCCI</div>
+            What's good. I'm online and ready. What do you need?
+        </div>
+    </div>
+
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Ask Lucci anything..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        const input = document.getElementById("userInput");
+        const chat = document.getElementById("chat");
+
+        input.addEventListener("keypress", function(e) {
+            if (e.key === "Enter") sendMessage();
+        });
+
+        async function sendMessage() {
+            const message = input.value.trim();
+            if (!message) return;
+
+            appendMessage("user", message);
+            input.value = "";
+
+            const thinking = document.createElement("div");
+            thinking.className = "thinking";
+            thinking.id = "thinking";
+            thinking.textContent = "Lucci is thinking...";
+            chat.appendChild(thinking);
+            chat.scrollTop = chat.scrollHeight;
+
+            try {
+                const response = await fetch("/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: message })
+                });
+                const data = await response.json();
+                document.getElementById("thinking").remove();
+                appendMessage("lucci", data.response);
+            } catch (error) {
+                document.getElementById("thinking").remove();
+                appendMessage("lucci", "Something went wrong. Try again.");
+                console.error(error);
+            }
+        }
+
+        function appendMessage(sender, text) {
+            const div = document.createElement("div");
+            div.className = "message " + (sender === "user" ? "user-message" : "lucci-message");
+            if (sender === "lucci") {
+                div.innerHTML = "<div class='lucci-label'>LUCCI</div>" + text;
+            } else {
+                div.textContent = text;
+            }
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        }
+    </script>
+</body>
+</html>
