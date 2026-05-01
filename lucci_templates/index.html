@@ -16,7 +16,6 @@
   --muted:#6b6b85;
   --muted2:#4a4a62;
   --accent:#a78bfa;
-  --accent2:#7c3aed;
   --lime:#c8f060;
   --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
@@ -27,31 +26,12 @@ body{
   font-family:var(--font);display:flex;flex-direction:column;
   overflow:hidden;position:relative;
 }
-.orb{
-  position:fixed;border-radius:50%;
-  filter:blur(80px);pointer-events:none;z-index:0;
-  animation:drift 12s ease-in-out infinite;
-}
-.orb1{width:300px;height:300px;background:rgba(124,58,237,0.15);top:-80px;right:-80px;animation-delay:0s}
-.orb2{width:250px;height:250px;background:rgba(34,211,238,0.08);bottom:100px;left:-60px;animation-delay:-4s}
-.orb3{width:200px;height:200px;background:rgba(200,240,96,0.06);top:40%;right:10%;animation-delay:-8s}
-@keyframes drift{
-  0%,100%{transform:translate(0,0) scale(1)}
-  33%{transform:translate(20px,-20px) scale(1.05)}
-  66%{transform:translate(-15px,15px) scale(0.95)}
-}
-body::before{
-  content:'';position:fixed;inset:0;
-  background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);
-  background-size:40px 40px;pointer-events:none;z-index:0;
-}
 header{
   position:relative;z-index:10;
   display:flex;align-items:center;justify-content:space-between;
   padding:16px 20px;
   border-bottom:1px solid var(--border);
-  background:rgba(5,5,10,0.85);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  background:rgba(5,5,10,0.95);
 }
 .logo-wrap{display:flex;align-items:center;gap:10px}
 .logo-icon{
@@ -102,7 +82,7 @@ header{
   font-size:13px;color:var(--muted);cursor:pointer;font-family:var(--font);
   transition:all 0.2s;text-align:left;
 }
-.suggestion:hover{background:var(--surface2);color:var(--text);border-color:rgba(167,139,250,0.3);transform:translateY(-1px)}
+.suggestion:active{background:var(--surface2);color:var(--text);border-color:rgba(167,139,250,0.3)}
 .s-icon{display:block;font-size:16px;margin-bottom:4px}
 .msg{display:flex;gap:10px;margin-bottom:20px;animation:fadeUp 0.25s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -132,8 +112,7 @@ header{
 .input-area{
   position:relative;z-index:10;
   padding:12px 16px 28px;
-  background:rgba(5,5,10,0.9);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  background:rgba(5,5,10,0.95);
   border-top:1px solid var(--border);
 }
 .input-outer{max-width:640px;margin:0 auto;position:relative}
@@ -145,4 +124,161 @@ header{
 .input-outer.focused .input-glow{opacity:0.4}
 .input-wrap{
   position:relative;z-index:1;
-  background:var(--surfa
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:16px;display:flex;align-items:flex-end;gap:8px;
+  padding:10px 10px 10px 14px;
+}
+#user-input{
+  flex:1;background:none;border:none;outline:none;
+  color:var(--text);font-family:var(--font);
+  font-size:16px;line-height:1.5;
+  resize:none;max-height:120px;padding:2px 0;
+}
+#user-input::placeholder{color:var(--muted2)}
+.send-btn{
+  width:36px;height:36px;border-radius:12px;
+  background:linear-gradient(135deg,#7c3aed,#a78bfa);
+  border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all 0.2s;opacity:0.35;
+}
+.send-btn.active{opacity:1}
+.send-btn.active:active{transform:scale(0.93)}
+.send-btn svg{width:15px;height:15px}
+.input-hint{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-top:8px;font-size:11px;color:var(--muted2);
+}
+.hint-dot{width:3px;height:3px;border-radius:50%;background:var(--muted2)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-wrap">
+    <div class="logo-icon">L</div>
+    <div class="logo">Lucci<em>.</em></div>
+  </div>
+  <div class="status-pill"><div class="dot"></div>Online</div>
+</header>
+
+<div id="chat">
+  <div class="inner" id="messages">
+    <div class="welcome" id="welcome">
+      <div class="welcome-badge">AI-powered assistant</div>
+      <h1>Meet <span class="grad">Lucci</span></h1>
+      <p>Your sharp personal AI. Direct answers, zero fluff.</p>
+      <div class="suggestions">
+        <button class="suggestion" onclick="sendSuggestion(this)"><span class="s-icon">🔍</span>Search the web</button>
+        <button class="suggestion" onclick="sendSuggestion(this)"><span class="s-icon">⏰</span>What time is it?</button>
+        <button class="suggestion" onclick="sendSuggestion(this)"><span class="s-icon">💡</span>Business idea help</button>
+        <button class="suggestion" onclick="sendSuggestion(this)"><span class="s-icon">📝</span>Save a note</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="input-area">
+  <div class="input-outer" id="input-outer">
+    <div class="input-glow"></div>
+    <div class="input-wrap">
+      <textarea id="user-input" rows="1" placeholder="Ask Lucci anything..."></textarea>
+      <button class="send-btn" id="send-btn" onclick="sendMessage()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div class="input-hint">
+    <span>Lucci AI</span><div class="hint-dot"></div>
+    <span>May make mistakes</span><div class="hint-dot"></div>
+    <span>Verify important info</span>
+  </div>
+</div>
+
+<script>
+const input=document.getElementById('user-input');
+const sendBtn=document.getElementById('send-btn');
+const messages=document.getElementById('messages');
+const chat=document.getElementById('chat');
+const inputOuter=document.getElementById('input-outer');
+
+input.addEventListener('focus',()=>inputOuter.classList.add('focused'));
+input.addEventListener('blur',()=>inputOuter.classList.remove('focused'));
+input.addEventListener('input',()=>{
+  input.style.height='auto';
+  input.style.height=Math.min(input.scrollHeight,120)+'px';
+  sendBtn.classList.toggle('active',input.value.trim().length>0);
+});
+input.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}
+});
+
+function sendSuggestion(btn){
+  const lines=btn.innerText.split('\n').map(l=>l.trim()).filter(Boolean);
+  input.value=lines[lines.length-1];
+  input.dispatchEvent(new Event('input'));
+  sendMessage();
+}
+
+function addMessage(role,text){
+  const welcome=document.getElementById('welcome');
+  if(welcome)welcome.remove();
+  const msg=document.createElement('div');
+  msg.className=`msg ${role}`;
+  const avatar=document.createElement('div');
+  avatar.className=`avatar ${role==='ai'?'ai':'user-av'}`;
+  avatar.textContent=role==='ai'?'L':'Y';
+  const bubble=document.createElement('div');
+  bubble.className='bubble';
+  bubble.textContent=text;
+  msg.appendChild(avatar);msg.appendChild(bubble);
+  messages.appendChild(msg);
+  chat.scrollTop=chat.scrollHeight;
+}
+
+function addTyping(){
+  const welcome=document.getElementById('welcome');
+  if(welcome)welcome.remove();
+  const msg=document.createElement('div');
+  msg.className='msg ai';msg.id='typing-msg';
+  const avatar=document.createElement('div');
+  avatar.className='avatar ai';avatar.textContent='L';
+  const bubble=document.createElement('div');
+  bubble.className='bubble';
+  bubble.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';
+  msg.appendChild(avatar);msg.appendChild(bubble);
+  messages.appendChild(msg);
+  chat.scrollTop=chat.scrollHeight;
+}
+
+function removeTyping(){
+  const t=document.getElementById('typing-msg');
+  if(t)t.remove();
+}
+
+async function sendMessage(){
+  const text=input.value.trim();
+  if(!text)return;
+  addMessage('user',text);
+  input.value='';input.style.height='auto';
+  sendBtn.classList.remove('active');
+  addTyping();
+  try{
+    const res=await fetch('/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message:text})
+    });
+    const data=await res.json();
+    removeTyping();
+    addMessage('ai',data.response);
+  }catch(err){
+    removeTyping();
+    addMessage('ai','Something went wrong. Try again.');
+  }
+}
+</script>
+</body>
+</html>
