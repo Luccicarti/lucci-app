@@ -76,4 +76,214 @@
 
   .welcome p {
     font-size: 15px; color: var(--muted);
-    line-height: 1.6;
+    line-height: 1.6; max-width: 320px;
+    margin: 0 auto 28px;
+  }
+
+  .suggestions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+
+  .suggestion {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 100px;
+    padding: 8px 16px;
+    font-size: 13px; color: var(--muted);
+    cursor: pointer; font-family: var(--font);
+  }
+
+  .msg { display: flex; gap: 12px; margin-bottom: 24px; }
+  .msg.user { flex-direction: row-reverse; }
+
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    flex-shrink: 0; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 500;
+  }
+
+  .avatar.ai { background: var(--accent-dim); border: 1px solid rgba(200,240,96,0.2); color: var(--accent); }
+  .avatar.user-av { background: var(--surface2); border: 1px solid var(--border2); color: var(--muted); }
+
+  .bubble {
+    max-width: calc(100% - 52px);
+    padding: 12px 16px; border-radius: var(--radius);
+    font-size: 15px; line-height: 1.65;
+  }
+
+  .msg.ai .bubble {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 4px var(--radius) var(--radius) var(--radius); color: var(--text);
+  }
+
+  .msg.user .bubble {
+    background: var(--user-bg); border: 1px solid var(--border2);
+    border-radius: var(--radius) 4px var(--radius) var(--radius); color: var(--text);
+  }
+
+  .typing { display: flex; gap: 5px; align-items: center; padding: 4px 0; }
+  .typing span {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--muted); animation: bounce 1.2s ease infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
+  }
+
+  .input-area {
+    padding: 12px 16px 32px;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+  }
+
+  .input-wrap {
+    max-width: 680px; margin: 0 auto;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 14px;
+    display: flex; align-items: flex-end; gap: 8px;
+    padding: 10px 12px;
+  }
+
+  #user-input {
+    flex: 1; background: none; border: none; outline: none;
+    color: var(--text); font-family: var(--font);
+    font-size: 16px; line-height: 1.5;
+    resize: none; max-height: 120px; padding: 2px 0;
+  }
+
+  #user-input::placeholder { color: var(--muted); }
+
+  .send-btn {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--accent); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; opacity: 0.4; transition: opacity 0.2s;
+  }
+
+  .send-btn.active { opacity: 1; }
+  .send-btn svg { width: 16px; height: 16px; }
+
+  .hint { text-align: center; font-size: 11px; color: var(--muted); margin-top: 8px; opacity: 0.5; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Lucci<span>.</span></div>
+  <div class="status"><div class="dot"></div> Online</div>
+</header>
+
+<div id="chat">
+  <div class="inner" id="messages">
+    <div class="welcome" id="welcome">
+      <h1>Hey, I'm <span>Lucci</span></h1>
+      <p>Your sharp personal AI. Ask me anything — I'll get straight to the point.</p>
+      <div class="suggestions">
+        <button class="suggestion" onclick="sendSuggestion(this)">Search the web</button>
+        <button class="suggestion" onclick="sendSuggestion(this)">What time is it?</button>
+        <button class="suggestion" onclick="sendSuggestion(this)">Help with a business idea</button>
+        <button class="suggestion" onclick="sendSuggestion(this)">Save a note</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="input-area">
+  <div class="input-wrap">
+    <textarea id="user-input" rows="1" placeholder="Message Lucci..."></textarea>
+    <button class="send-btn" id="send-btn" onclick="sendMessage()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#0e0e0f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+      </svg>
+    </button>
+  </div>
+  <p class="hint">Lucci can make mistakes. Double-check important info.</p>
+</div>
+
+<script>
+const input = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+const messages = document.getElementById('messages');
+const chat = document.getElementById('chat');
+
+input.addEventListener('input', () => {
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+  sendBtn.classList.toggle('active', input.value.trim().length > 0);
+});
+
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+function sendSuggestion(btn) {
+  input.value = btn.textContent;
+  input.dispatchEvent(new Event('input'));
+  sendMessage();
+}
+
+function addMessage(role, text) {
+  const welcome = document.getElementById('welcome');
+  if (welcome) welcome.remove();
+  const msg = document.createElement('div');
+  msg.className = `msg ${role}`;
+  const avatar = document.createElement('div');
+  avatar.className = `avatar ${role === 'ai' ? 'ai' : 'user-av'}`;
+  avatar.textContent = role === 'ai' ? 'L' : 'Y';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = text;
+  msg.appendChild(avatar);
+  msg.appendChild(bubble);
+  messages.appendChild(msg);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function addTyping() {
+  const welcome = document.getElementById('welcome');
+  if (welcome) welcome.remove();
+  const msg = document.createElement('div');
+  msg.className = 'msg ai'; msg.id = 'typing-msg';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar ai'; avatar.textContent = 'L';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+  msg.appendChild(avatar); msg.appendChild(bubble);
+  messages.appendChild(msg);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing-msg');
+  if (t) t.remove();
+}
+
+async function sendMessage() {
+  const text = input.value.trim();
+  if (!text) return;
+  addMessage('user', text);
+  input.value = ''; input.style.height = 'auto';
+  sendBtn.classList.remove('active');
+  addTyping();
+  try {
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text })
+    });
+    const data = await res.json();
+    removeTyping();
+    addMessage('ai', data.response);
+  } catch (err) {
+    removeTyping();
+    addMessage('ai', 'Something went wrong. Try again.');
+  }
+}
+</script>
+</body>
+</html>
