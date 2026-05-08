@@ -449,7 +449,7 @@ async function sendMessage(){
   if(!text&&!selectedImageFile)return;
 
   // ── IMAGE GENERATION ──
-  const generateTriggers=["generate image","create image","draw","imagine","make an image","paint","generate an image"];
+  const generateTriggers=["generate","create image","draw","imagine","make an image","paint","an image","a picture","a photo","a cartoon","sketch","illustration","render","visualize"];
   const isGenerate=generateTriggers.some(t=>text.toLowerCase().includes(t));
 
   if(isGenerate){
