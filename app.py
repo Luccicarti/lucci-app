@@ -41,6 +41,11 @@ def chat():
     user_input = request.json.get("message")
     user_input_lower = user_input.lower()
 
+    # ── BLOCK GROQ FROM HANDLING IMAGE GENERATION ──
+    generate_triggers = ["generate image", "create image", "draw", "imagine", "make an image", "paint", "generate an image"]
+    if any(trigger in user_input_lower for trigger in generate_triggers):
+        return jsonify({"skip": True})
+
     if any(word in user_input_lower for word in ["time", "date", "day", "today"]):
         current_time = get_current_time()
         return jsonify({"response": "Right now it's " + current_time})
@@ -122,7 +127,6 @@ def imagine():
         return jsonify({"response": "No prompt given."})
 
     encoded = urllib.parse.quote(prompt)
-    # Pollinations v3 - more reliable image generation
     image_url = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=1024&model=flux&nologo=true&enhance=true&seed={int(datetime.datetime.now().timestamp())}"
     return jsonify({"image_url": image_url})
 
