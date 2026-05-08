@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response, stream_with_context
 from groq import Groq
 import datetime
 import os
 import base64
 import urllib.parse
+import json
 from ddgs import DDGS
 
 app = Flask(__name__, template_folder="lucci_templates")
@@ -56,16 +57,23 @@ def chat():
     else:
         conversation_history.append({"role": "user", "content": user_input})
 
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "system", "content": system_prompt}] + conversation_history,
-        max_tokens=1024
-    )
+    def generate():
+        full_reply = ""
+        stream = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "system", "content": system_prompt}] + conversation_history,
+            max_tokens=1024,
+            stream=True
+        )
+        for chunk in stream:
+            token = chunk.choices[0].delta.content or ""
+            full_reply += token
+            yield f"data: {json.dumps({'token': token})}\n\n"
 
-    reply = response.choices[0].message.content
-    conversation_history.append({"role": "assistant", "content": reply})
+        conversation_history.append({"role": "assistant", "content": full_reply})
+        yield f"data: {json.dumps({'done': True})}\n\n"
 
-    return jsonify({"response": reply})
+    return Response(stream_with_context(generate()), mimetype="text/event-stream")
 
 
 # ── PHASE 1: AI VISION ──────────────────────────────────────────
@@ -114,7 +122,8 @@ def imagine():
         return jsonify({"response": "No prompt given."})
 
     encoded = urllib.parse.quote(prompt)
-    image_url = f"https://image.pollinations.ai/prompt/{encoded}?width=768&height=768&nologo=true"
+    # Pollinations v3 - more reliable image generation
+    image_url = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=1024&model=flux&nologo=true&enhance=true&seed={int(datetime.datetime.now().timestamp())}"
     return jsonify({"image_url": image_url})
 
 
