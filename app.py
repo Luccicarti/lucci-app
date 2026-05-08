@@ -3,6 +3,7 @@ from groq import Groq
 import datetime
 import os
 import base64
+import urllib.parse
 from ddgs import DDGS
 
 app = Flask(__name__, template_folder="lucci_templates")
@@ -76,9 +77,8 @@ def vision():
     image_file = request.files["image"]
     prompt = request.form.get("prompt", "Describe this image in detail.")
 
-    # Convert image to base64
     image_data = base64.b64encode(image_file.read()).decode("utf-8")
-    mime_type = image_file.content_type  # e.g. image/jpeg, image/png
+    mime_type = image_file.content_type
 
     response = client.chat.completions.create(
         model="llama-3.2-11b-vision-preview",
@@ -104,7 +104,18 @@ def vision():
 
     reply = response.choices[0].message.content
     return jsonify({"response": reply})
-# ────────────────────────────────────────────────────────────────
+
+
+# ── PHASE 2: IMAGE GENERATION ───────────────────────────────────
+@app.route("/imagine", methods=["POST"])
+def imagine():
+    prompt = request.json.get("prompt", "")
+    if not prompt:
+        return jsonify({"response": "No prompt given."})
+
+    encoded = urllib.parse.quote(prompt)
+    image_url = f"https://image.pollinations.ai/prompt/{encoded}?width=768&height=768&nologo=true"
+    return jsonify({"image_url": image_url})
 
 
 if __name__ == "__main__":
