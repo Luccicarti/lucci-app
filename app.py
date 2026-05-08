@@ -30,7 +30,7 @@ def web_search(query):
             results.append(r["title"] + ": " + r["body"])
     return "\n\n".join(results)
 
-system_prompt = "You are Lucci, a sharp and intelligent personal AI assistant. You are direct, confident, and get straight to the point. You help with business ideas, automation, AI tools, research, and programming. You never give long unnecessary responses unless asked. You speak like a smart advisor, not a corporate robot."
+system_prompt = "You are Lucci, a sharp and intelligent personal AI assistant. You are direct, confident, and get straight to the point. You help with business ideas, automation, AI tools, research, and programming. You never give long unnecessary responses unless asked. You speak like a smart advisor, not a corporate robot. IMPORTANT: You cannot generate, create, draw, or display images. If someone asks you to generate or create an image, simply say: 'Sending that to the image engine now.' and nothing else."
 
 @app.route("/")
 def home():
@@ -42,7 +42,7 @@ def chat():
     user_input_lower = user_input.lower()
 
     # ── BLOCK GROQ FROM HANDLING IMAGE GENERATION ──
-    generate_triggers = ["generate image", "create image", "draw", "imagine", "make an image", "paint", "generate an image"]
+    generate_triggers = ["generate", "create image", "draw", "imagine", "make an image", "paint", "an image", "a picture", "a photo", "a cartoon", "sketch", "illustration", "render", "visualize"]
     if any(trigger in user_input_lower for trigger in generate_triggers):
         return jsonify({"skip": True})
 
