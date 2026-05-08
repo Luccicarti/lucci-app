@@ -57,7 +57,7 @@ def chat():
         conversation_history.append({"role": "user", "content": user_input})
 
     response = client.chat.completions.create(
-        model="llama3-70b-8192",
+        model="llama-3.3-70b-versatile",
         messages=[{"role": "system", "content": system_prompt}] + conversation_history,
         max_tokens=1024
     )
@@ -81,7 +81,7 @@ def vision():
     mime_type = image_file.content_type
 
     response = client.chat.completions.create(
-        model="llama-3.2-11b-vision-preview",
+        model="meta-llama/llama-4-scout-17b-16e-instruct",
         messages=[
             {
                 "role": "user",
